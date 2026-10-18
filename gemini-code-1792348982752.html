@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Портал сотрудников — ЦГБ №7</title>
+  <link rel="icon" type="image/png" href="https://ru1.cdn.pixsafe.online/albums/ifgrb/1495112-middle1_LW28I.png">
+  
+  <style>
+    :root {
+      --primary-grad: linear-gradient(135deg, #EEA2B0 0%, #D87A8A 100%);
+      --primary-solid: #D87A8A;
+      --primary-hover: #C56575;
+      
+      /* Тёмная тема по умолчанию (тёмно-серая) */
+      --bg-main: #18181C;
+      --bg-sidebar: #222228;
+      --bg-card: #2B2B32;
+      --bg-card-inner: #202026;
+      --text-main: #F5F5F7;
+      --text-muted: #A0A0AB;
+      --border-color: #383842;
+      --success: #16A34A;
+      --danger: #DC2626;
+      --radius: 12px;
+    }
+
+    [data-theme="light"] {
+      /* Светлая тема (чисто белая) */
+      --bg-main: #FFFFFF;
+      --bg-sidebar: #F8F9FA;
+      --bg-card: #FFFFFF;
+      --bg-card-inner: #F1F3F5;
+      --text-main: #1A1A1E;
+      --text-muted: #6C757D;
+      --border-color: #E9ECEF;
+      --success: #15803D;
+      --danger: #B91C1C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Прелоадер */
+    #preloader {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: var(--bg-main);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    #preloader.fade-out { opacity: 0; visibility: hidden; }
+    .loader-logo { width: 75px; }
+
+    /* Всплывающие уведомления */
+    #notification-container {
+      position: fixed;
+      top: 20px; right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .custom-notification {
+      background: var(--bg-card);
+      border-left: 4px solid var(--primary-solid);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      pointer-events: auto;
+      animation: slideIn 0.25s ease forwards;
+    }
+    .custom-notification.success { border-left-color: var(--success); }
+    .custom-notification.error { border-left-color: var(--danger); }
+
+    .notif-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 3px; }
+    .notif-desc { color: var(--text-muted); font-size: 0.82rem; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeOutAnim {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* БОКОВАЯ ПАНЕЛЬ СЛЕВА */
+    .sidebar {
+      width: 280px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-logo { height: 42px; object-fit: contain; }
+    .sidebar-brand-text h2 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+    .sidebar-brand-text p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+    .sidebar-menu {
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .menu-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 12px 6px;
+    }
+
+    /* Розовые нежные кнопки */
+    .menu-btn {
+      width: 100%;
+      padding: 12px 14px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.88rem;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .menu-btn:hover { background: var(--bg-card-inner); color: var(--text-main); }
+    .menu-btn.active {
+      background: var(--primary-grad);
+      color: #FFFFFF !important;
+      box-shadow: 0 4px 15px rgba(216, 122, 138, 0.35);
+      border-color: transparent;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Минималистичный ползунок смены тем без текста */
+    .theme-switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 54px;
+      height: 28px;
+    }
+    .theme-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--bg-card-inner);
+      border: 1px solid var(--border-color);
+      transition: .3s;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background: var(--primary-grad);
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider:before {
+      transform: translateX(25px);
+    }
+    .slider-icon { font-size: 12px; user-select: none; }
+
+    /* ОСНОВНОЙ КОНТЕНТ */
+    .main-content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .top-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 18px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+    .top-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+    .top-header p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .content-container {
+      max-width: 1050px;
+      margin: 30px auto;
+      padding: 0 25px;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--primary-solid); }
+
+    .tab-pane {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 35px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .tab-pane.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Таблицы */
+    .table-box { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border-color); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: var(--bg-card-inner); color: var(--primary-solid); padding: 14px 18px; font-size: 0.82rem; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+    td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); font-size: 0.92rem; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(216, 122, 138, 0.05); }
+
+    .symptom-tag, .service-name { font-weight: 600; color: var(--text-main); }
+    .med-name, .price-value { color: var(--primary-solid); font-weight: 600; }
+
+    /* Регламенты и блоки */
+    .rules-container { line-height: 1.6; font-size: 0.95rem; }
+    .rules-header { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+    .rules-header h2 { font-size: 1.2rem; color: var(--primary-solid); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .section-block {
+      background: var(--bg-card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary-solid);
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 15px;
+    }
+    .step-title { font-weight: 700; color: var(--text-main); margin-bottom: 8px; font-size: 0.98rem; }
+
+    .alert-box {
+      background: rgba(220, 38, 38, 0.08);
+      border-left: 4px solid var(--danger);
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+
+    .list-styled { padding-left: 20px; margin: 8px 0; }
+    .list-styled li { margin-bottom: 6px; }
+
+    .img-preview { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border-color); margin: 12px 0; }
+    .img-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 12px 0; }
+
+    /* Устав */
+    .charter-section { line-height: 1.7; font-size: 0.95rem; }
+    .charter-title { text-align: center; margin-bottom: 30px; }
+    .charter-title h2 { font-size: 1.25rem; color: var(--primary-solid); text-transform: uppercase; font-weight: 800; }
+    .charter-title p { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
+    .charter-toc { background: var(--bg-card-inner); border-radius: var(--radius); padding: 20px; margin-bottom: 30px; border: 1px solid var(--border-color); }
+    .charter-toc h3 { font-size: 0.95rem; color: var(--primary-solid); margin-bottom: 12px; text-transform: uppercase; }
+    .charter-toc ul { list-style-type: none; padding-left: 0; }
+    .charter-toc li { margin-bottom: 8px; }
+    .charter-toc a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .charter-toc a:hover { color: var(--primary-solid); text-decoration: underline; }
+    .chapter-header { font-size: 1.05rem; color: var(--primary-solid); margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid var(--primary-solid); padding-bottom: 8px; text-transform: uppercase; font-weight: 700; }
+    .charter-item { margin-bottom: 14px; padding: 12px 16px; border-radius: 6px; background: var(--bg-card-inner); border: 1px solid var(--border-color); }
+    .charter-item.hidden { display: none !important; }
+    .charter-item.highlight { background-color: rgba(216, 122, 138, 0.15); border-left: 4px solid var(--primary-solid); }
+
+    .academy-steps { display: flex; gap: 12px; margin-bottom: 25px; }
+    .academy-tab {
+      flex: 1;
+      padding: 14px;
+      background: var(--bg-card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .academy-tab.active { background: var(--primary-grad); color: #fff; border-color: var(--primary-solid); }
+    .academy-tab.locked { opacity: 0.4; cursor: not-allowed; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .form-control:focus { border-color: var(--primary-solid); }
+
+    .btn-action {
+      background: var(--primary-grad);
+      color: #FFF;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 15px rgba(216, 122, 138, 0.25);
+    }
+    .btn-action:hover { opacity: 0.95; }
+
+    .quiz-box { background: var(--bg-card-inner); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+    .quiz-box h4 { margin-bottom: 12px; font-size: 1rem; color: var(--text-main); }
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+    .quiz-label { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-card); border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); font-size: 0.9rem; }
+    .quiz-label:hover { border-color: var(--primary-solid); }
+    input[type="radio"] { accent-color: var(--primary-solid); width: 18px; height: 18px; }
+
+    /* Стили для страницы итогов экзамена */
+    .exam-result-card {
+      background: var(--bg-card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .exam-result-card h3 { font-size: 1.3rem; margin-bottom: 20px; text-transform: uppercase; }
+    .exam-result-info {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: left;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.98rem;
+    }
+    .exam-result-info span { font-weight: 700; color: var(--primary-solid); }
+
+    .no-results { text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600; }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <div id="notification-container"></div>
+
+  <div id="preloader">
+    <img src="https://ru1.cdn.pixsafe.online/albums/ifgrb/1495112-middle1_LW28I.png" class="loader-logo" alt="Логотип">
+    <div style="font-weight: 600; color: var(--text-main);">Загрузка портала ЦГБ №7...</div>
+  </div>
+
+  <!-- БОКОВАЯ ПАНЕЛЬ НАВИГАЦИИ СЛЕВА -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="https://ru1.cdn.pixsafe.online/albums/ifgrb/1495112-middle1_LW28I.png" alt="ЦГБ №7" class="sidebar-logo">
+      <div class="sidebar-brand-text">
+        <h2>ЦГБ №7 Москвы и МО</h2>
+        <p>Портал сотрудников</p>
+      </div>
+    </div>
+
+    <div class="sidebar-menu">
+      <div class="menu-section-title">База знаний</div>
+      <button class="menu-btn active" onclick="switchTab('memo', this)">💊 Памятка по препаратам</button>
+      <button class="menu-btn" onclick="switchTab('price', this)">🏷️ Прайс-лист услуг</button>
+      <button class="menu-btn" onclick="switchTab('pmp', this)">🚑 ПМП и таблетки</button>
+      <button class="menu-btn" onclick="switchTab('lmk', this)">📋 Регламент ЛМК</button>
+      <button class="menu-btn" onclick="switchTab('narko', this)">📋 Справки нарколога</button>
+      <button class="menu-btn" onclick="switchTab('charter', this)">📜 Внутренний устав</button>
+
+      <div class="menu-section-title" style="margin-top: 15px;">Обучение</div>
+      <button class="menu-btn" onclick="switchTab('academy', this)" style="border: 1px dashed var(--primary-solid);">🎓 Академия (Повышение)</button>
+    </div>
+
+    <!-- Переключатель тем без текста -->
+    <div class="sidebar-footer">
+      <div class="theme-switch-wrapper">
+        <label class="theme-switch">
+          <input type="checkbox" id="themeToggleCheckbox" onchange="toggleTheme()">
+          <span class="slider">
+            <span class="slider-icon">🌙</span>
+            <span class="slider-icon">☀️</span>
+          </span>
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ОСНОВНОЙ КОНТЕНТ СПРАВА -->
+  <div class="main-content-wrapper">
+    <header class="top-header">
+      <div>
+        <h3 id="headerTitle">Памятка по препаратам</h3>
+        <p>Информационный центр Государственного бюджетного учреждения здравоохранения «ЦГБ №7»</p>
+      </div>
+    </header>
+
+    <div class="content-container">
+      
+      <div id="searchWrapper">
+        <input type="text" class="search-input" id="searchInput" oninput="handleSearch()" placeholder="🔍 Быстрый поиск по разделу...">
+      </div>
+
+      <!-- 1. Памятка -->
+      <div id="tab-memo" class="tab-pane active">
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Симптом / Вид боли</th>
+                <th>Рекомендуемый препарат</th>
+                <th>Форма выпуска</th>
+              </tr>
+            </thead>
+            <tbody id="medTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. Прайс-лист -->
+      <div id="tab-price" class="tab-pane">
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Наименование медицинской услуги</th>
+                <th style="width: 220px;">Стоимость</th>
+              </tr>
+            </thead>
+            <tbody id="priceTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. ПМП и таблетки -->
+      <div id="tab-pmp" class="tab-pane">
+        <div class="rules-container">
+          <div class="rules-header"><h2>Правила оказания первой медицинской помощи и выдачи препаратов</h2></div>
+          
+          <div class="section-block">
+            <div class="section-title">🚑 Раздел 1. Оказание первой медицинской помощи</div>
+            <div class="step-card">
+              <div class="step-title">1.1. Общие положения</div>
+              <p>Первая медицинская помощь оказывается сотрудником ЦГБ в рамках выполнения должностных обязанностей. Отказ в оказании помощи лицу, находящемуся в бессознательном состоянии и нуждающемуся в реанимации, запрещён.</p>
+              <div class="alert-box"><strong>⚠️ Исключение (Power Gaming):</strong> Ситуация, когда вооружённые лица под угрозой применения оружия приказывают не оказывать помощь конкретному пострадавшему.</div>
+            </div>
+            
+            <div class="step-card">
+              <div class="step-title">1.2. Обеспечение безопасности при оказании помощи</div>
+              <p>Перед началом реанимационных мероприятий врач обязан оценить окружающую обстановку на предмет наличия угрозы жизни и здоровью как самого врача, так и пострадавшего.</p>
+              <p style="margin-top: 8px;">В случае нахождения пострадавшего в зоне активной перестрелки, на проезжей части дороги либо в ином потенциально опасном месте врач обязан предварительно переместить тело пострадавшего в безопасную зону.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">1.3. Приоритетность оказания помощи</div>
+              <p>При одновременном наличии двух и более пострадавших, находящихся в бессознательном состоянии и требующих реанимации, врач обязан соблюдать установленную очерёдность оказания помощи:</p>
+              <ul class="list-styled" style="margin-top: 6px;">
+                <li><strong>Первая очередь:</strong> сотрудники государственных структур.</li>
+                <li><strong>Вторая очередь:</strong> гражданские лица, не состоящие в криминальных организациях.</li>
+                <li><strong>Третья очередь:</strong> представители криминальных организаций и формирований.</li>
+              </ul>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">1.4. Средства и методы реанимации</div>
+              <p>Основным и наиболее эффективным средством для возвращения пострадавшего в сознание является <strong>дефибриллятор</strong>.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">1.5. Фиксация результата оказания помощи</div>
+              <p>После успешного спасения пациента на экране появляется системное уведомление: <em>«Пациент спасён, вы получите X рублей»</em>. Врач обязан сделать скриншот данного уведомления.</p>
+              <div class="img-grid">
+                <img src="https://cdn.pixsafe.online/albums/v7TEb/image_4aoWw.png" alt="Пример скриншота ПМП 1" class="img-preview">
+                <img src="https://cdn.pixsafe.online/albums/v7TEb/image_RoCm3.png" alt="Пример скриншота ПМП 2" class="img-preview">
+              </div>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">💊 Раздел 2. Выдача лекарственных препаратов таблетированной формы</div>
+            
+            <div class="step-card">
+              <div class="step-title">2.1. Общие положения</div>
+              <p>Выдача лекарственных препаратов таблетированной формы осуществляется исключительно в медицинских целях.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">2.2. Порядок выдачи препаратов в плановом порядке</div>
+              <p>При обращении пациента с жалобами врач обязан собрать анамнез, подобрать препарат, спросить про аллергические реакции (<em>«Имеются ли у вас аллергические реакции на лекарственные препараты?»</em>) и выдать через клавишу <strong>E</strong> (пункт меню «Лечить»).</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">2.3. Выдача обезболивающих препаратов после реанимации</div>
+              <p>Если пациент был возвращён в сознание посредством реанимации, врач имеет право незамедлительно выдать ему обезболивающее общего спектра без сбора аллергологического анамнеза.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">2.4. Фиксация результата выдачи препарата</div>
+              <p>Сумма вознаграждения составляет <span class="price-value">640 рублей</span>. Сделайте скриншот системного уведомления.</p>
+              <div style="text-align: center; margin-top: 15px;">
+                <img src="https://cdn.pixsafe.online/albums/v7TEb/image_zTJ6q.png" alt="Пример скриншота выдачи таблеток" class="img-preview" style="max-width: 480px; display: inline-block;">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4. ЛМК (Полный гайд) -->
+      <div id="tab-lmk" class="tab-pane">
+        <div class="rules-container">
+          <div class="rules-header"><h2>Правила выдачи и продления медицинских книжек (ЛМК)</h2></div>
+          
+          <div class="section-block">
+            <div class="section-title">📊 Раздел 1. Тарифы и расчёты</div>
+            <ul class="list-styled">
+              <li><strong>Оформление новой ЛМК</strong> — <span class="price-value">30 000 рублей</span>.</li>
+              <li><strong>Продление существующей ЛМК</strong> — <span class="price-value">10 000 рублей</span>.</li>
+            </ul>
+            <div class="alert-box">
+              <strong>⚠️ Важно:</strong> При технической выдаче документа через меню взаимодействия с пациентом автоматически списывается дополнительная сумма — от 3 000 до 6 000 рублей. Пациент передаёт вам сумму (30 000 или 10 000 рублей) наличными в момент оказания услуги, после чего вы сразу вносите полученную сумму на счёт фракции ЦГБ.
+            </div>
+            <div class="step-card" style="margin-top: 15px;">
+              <div class="step-title">Как пополнить счёт фракции:</div>
+              <p>Откройте на телефоне: <strong>Приложение «Фракция» → Вкладка «Счёт фракции» → Кнопка «Пополнить счёт»</strong> → Укажите точную сумму, полученную от пациента.</p>
+              <div style="color: var(--danger); font-weight: 700; margin-top: 8px;">🚫 Строго запрещено: удерживать деньги при себе, передавать третьим лицам или использовать в личных целях. Подобные действия расцениваются как присвоение имущества (п. 4.4.1 правил государственных организаций).</div>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">🩺 Раздел 2. Пошаговый алгоритм действий врача</div>
+            
+            <div class="step-card">
+              <div class="step-title">Шаг 2. Перемещение в кабинет</div>
+              <p>Оказывать услугу можно только в оборудованном медицинском помещении. Допустимые локации: <strong>манипуляционная</strong> или <strong>кабинет терапевта</strong>.</p>
+              <p style="font-style: italic; color: var(--text-muted); margin-top: 6px;">💡 <em>RP отыгрыш:</em> «Пройдёмте в кабинет — там мы сможем провести опрос и оформить документы в надлежащих условиях».</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 3. Приём документов и оплаты</div>
+              <ul class="list-styled">
+                <li><strong>Паспорт нового образца</strong> — обязательно.</li>
+                <li><strong>Существующая медицинская книжка</strong> — только если нужно продление. Если книжки нет, оформляете новую по тарифу 30 000 рублей.</li>
+                <li><strong>Денежные средства</strong> — в полном объёме, наличными.</li>
+              </ul>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 4. Медицинский опрос</div>
+              <p>Проведите устный опрос, чтобы выявить противопоказания и собрать анамнез. Тон — профессиональный: спокойный, нейтральный, без излишней эмоциональности.</p>
+              <p style="margin-top: 10px; font-weight: 600;">Задайте пациенту следующие вопросы:</p>
+              <ul class="list-styled">
+                <li>«Болели ли вы ОРВИ или ОРЗ за последний календарный месяц?»</li>
+                <li>«Были ли у вас переломы костей или серьёзные травмы опорно‑двигательного аппарата за последние шесть месяцев?»</li>
+                <li>«Употребляете ли вы табачную или алкогольную продукцию на регулярной основе?»</li>
+                <li>«Есть ли у вас подтверждённые аллергические реакции на какие‑либо лекарства?»</li>
+                <li>«Состоите ли вы на диспансерном учёте по поводу хронических заболеваний?»</li>
+              </ul>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 5. Техническое оформление документа</div>
+              <p>Когда опрос завершён, оплата получена, а ответы не выявили явных препятствий:</p>
+              <p style="margin-top: 6px;">Нажмите клавишу <strong>E</strong>. В меню последовательно выберите: <strong>Выдать документ → Медицинская книжка → Выдать</strong>.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 6. Фиксация результата</div>
+              <p>После выдачи документа появится системное уведомление: <em>«Вы выдали документ и получите премию 3 000 рублей с зарплатой»</em>. Сделайте скриншот.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 7. Завершение финансовой операции</div>
+              <p>Немедленно внесите наличные, полученные от пациента, на счёт фракции. Невыполнение этого пункта влечёт дисциплинарную ответственность.</p>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">📜 Раздел 3. Дополнительные положения</div>
+            <div class="step-card">
+              <div class="step-title">Пример отыгрыша:</div>
+              <div style="background: var(--bg-card-inner); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+                /me приветствует пациента сдержанно, сохраняя профессиональный тон<br>
+                /todo Для оформления новой ЛМК потребуется 30 000 рублей, продление стоит 10 000. Какой вариант вам нужен?*<br>
+                /me ждёт ответа, затем просит паспорт и медицинскую книжку (если речь о продлении)<br>
+                /me проверяет документы, сверяет данные<br>
+                /do Документы в порядке.<br>
+                /me переходит к опросу, задаёт вопросы по стандартному перечню<br>
+                /do Противопоказаний не выявлено, ответы пациента адекватные.<br>
+                /me нажимает E, оформляет ЛМК через меню<br>
+                /do Медицинская книжка выдана.<br>
+                /me делает скриншот системного уведомления<br>
+                /todo Ваша ЛМК оформлена. Храните её в надёжном месте.<br>
+                (после ухода пациента врач пополняет счёт фракции)
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 5. Справки нарколога (Полный гайд) -->
+      <div id="tab-narko" class="tab-pane">
+        <div class="rules-container">
+          <div class="rules-header"><h2>Правила выдачи и продления справок от нарколога</h2></div>
+          
+          <div class="section-block">
+            <div class="section-title">📊 Раздел 1. Тарифы и расчёты</div>
+            <ul class="list-styled">
+              <li><strong>Оформление новой медицинской справки (от нарколога)</strong> — <span class="price-value">50 000 рублей</span>.</li>
+              <li><strong>Продление существующей справки</strong> — <span class="price-value">20 000 рублей</span>.</li>
+            </ul>
+            <div class="alert-box">
+              <strong>⚠️ Важно:</strong> При технической выдаче документа через меню взаимодействия с пациентом автоматически списывается дополнительная сумма — от 3 000 до 6 000 рублей. Пациент передаёт вам сумму (50 000 или 20 000 рублей) наличными в момент оказания услуги, после чего вы сразу вносите полученную сумму на счёт фракции ЦГБ.
+            </div>
+            <div class="step-card" style="margin-top: 15px;">
+              <div class="step-title">Как пополнить счёт фракции:</div>
+              <p>Откройте на телефоне: <strong>Приложение «Фракция» → Вкладка «Счёт фракции» → Кнопка «Пополнить счёт»</strong> → Укажите точную сумму, полученную от пациента.</p>
+              <div style="color: var(--danger); font-weight: 700; margin-top: 8px;">🚫 Строго запрещено: удерживать деньги при себе, передавать третьим лицам или использовать в личных целях. Подобные действия расцениваются как присвоение имущества (п. 4.4.1 правил государственных организаций).</div>
+            </div>
+          </div>
+
+          <div class="section-block">
+            <div class="section-title">🩺 Раздел 2. Пошаговый алгоритм действий врача</div>
+            
+            <div class="step-card">
+              <div class="step-title">Шаг 1. Информирование пациента</div>
+              <p>Перед началом процедуры чётко озвучьте стоимость услуги согласно разделу 1. Если пациент отказывается платить — услуга не оказывается.</p>
+              <p style="font-style: italic; color: var(--text-muted); margin-top: 6px;">💡 <em>Совет для отыгрыша:</em> «Для оформления справки от нарколога стоимость составляет 50 000 рублей. Если у вас уже есть действующая справка и нужно продление — 20 000 рублей. Сообщите, какой вариант вам нужен».</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 2. Перемещение в кабинет</div>
+              <p>Оказывать услугу можно только в оборудованном медицинском помещении. Допустимые локации: <strong>манипуляционная</strong> или <strong>кабинет терапевта</strong>.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 3. Приём документов и оплаты</div>
+              <ul class="list-styled">
+                <li><strong>Паспорт нового образца</strong> — обязательно.</li>
+                <li><strong>Существующая справка от нарколога</strong> — только если нужно продление. Если старой справки нет, оформляете новую по тарифу 50 000 рублей.</li>
+                <li><strong>Денежные средства</strong> — в полном объёме, наличными.</li>
+              </ul>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 4. Наркологический опрос</div>
+              <p>Проведите устный опрос, чтобы выявить признаки употребления запрещённых веществ и иные значимые факторы.</p>
+              
+              <div style="margin-top: 12px; font-weight: 600;">Сначала уточните принадлежность к силовым структурам:</div>
+              <ul class="list-styled">
+                <li><strong>Вопрос:</strong> «Являетесь ли вы сотрудником государственной силовой структуры?»</li>
+                <li>Если ответ «да», задайте дополнительный вопрос: «Применяли ли вы препарат „Военное обезболивающее“ за последние 24 часа?»</li>
+              </ul>
+              <div class="alert-box"><strong>🚨 Критически важно:</strong> Если с момента приёма препарата прошло менее 24 часов (24 минуты в игровом времени), откажите в выдаче справки и порекомендуйте обратиться позже.</div>
+
+              <div style="margin-top: 12px; font-weight: 600;">Основной перечень вопросов:</div>
+              <ul class="list-styled">
+                <li>«Употребляете ли вы психотропные либо наркотические вещества сейчас или в прошлом?»</li>
+                <li>«Обращались ли вы когда‑либо за наркологической помощью? Состоите ли на учёте у нарколога?»</li>
+                <li>«Употребляете ли табачную или алкогольную продукцию? Если да — как часто и в каких объёмах?»</li>
+                <li>«Есть ли проблемы со сном: трудности с засыпанием, частые пробуждения, чувство недосыпа?»</li>
+                <li>«Посещали ли вас когда‑либо мысли суицидального характера?»</li>
+                <li>«Оцените уровень тревожности и подверженности стрессу в повседневной жизни».</li>
+              </ul>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 5. Техническое оформление документа</div>
+              <p>Когда опрос завершён, оплата получена, а ответы не выявили противопоказаний:</p>
+              <p style="margin-top: 6px;">Нажмите клавишу <strong>E</strong>. В меню последовательно выберите: <strong>Выдать документ → Справка от нарколога → Выпустить</strong>.</p>
+              <p style="margin-top: 8px;">На финальном этапе выберите результат заключения: <strong>«отрицательный»</strong> или <strong>«положительный»</strong>.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 6. Фиксация результата</div>
+              <p>После выдачи документа появится системное уведомление: <em>«Вы выдали документ и получите премию 1 750 рублей с зарплатой»</em>. Обязательно сделайте скриншот.</p>
+            </div>
+
+            <div class="step-card">
+              <div class="step-title">Шаг 7. Завершение финансовой операции</div>
+              <p>Немедленно внесите наличные, полученные от пациента, на счёт фракции. Невыполнение этого пункта влечёт дисциплинарную ответственность.</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Устав (Полный текст) -->
+      <div id="tab-charter" class="tab-pane">
+        <div class="charter-section">
+          <div class="charter-title">
+            <h2>ВНУТРЕННИЙ УСТАВ</h2>
+            <p>ГОСУДАРСТВЕННОГО БЮДЖЕТНОГО УЧРЕЖДЕНИЯ ЗДРАВООХРАНЕНИЯ<br>«ЦЕНТРАЛЬНАЯ ГОРОДСКАЯ БОЛЬНИЦА № 7»<br>города Москвы и Московской области</p>
+          </div>
+
+          <div class="charter-toc" id="charterToc">
+            <h3>СОДЕРЖАНИЕ</h3>
+            <ul>
+              <li><a href="#sec1">Раздел I. Общие положения (Гл. 1-3)</a></li>
+              <li><a href="#sec2">Раздел II. Обязанности, запреты и режим труда (Гл. 4-8)</a></li>
+              <li><a href="#sec3">Раздел III. Дисциплина и кадры (Гл. 9-10)</a></li>
+              <li><a href="#sec4">Раздел IV. Служебная деятельность (Гл. 11-14)</a></li>
+            </ul>
+          </div>
+
+          <div id="charterBody">
+            <div class="chapter-block">
+              <h3 id="sec1" class="chapter-header">Раздел I. ОБЩИЕ ПОЛОЖЕНИЯ</h3>
+              
+              <div style="font-weight:700; color:var(--text-main); margin: 15px 0 8px;">Глава 1. Общие положения</div>
+              <div class="charter-item"><p><strong>Статья 1.1.</strong> Настоящий Устав является внутренним локальным нормативным актом, регулирующим деятельность Государственного бюджетного учреждения здравоохранения города Москвы и Московской области «Центральная городская больница №7» (далее — Учреждение, ЦГБ №7). Положения Устава обязательны к исполнению всеми сотрудниками.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.2.</strong> Устав определяет права и обязанности сотрудников, порядок взаимоотношений между ними, функции должностных лиц, структуру отделов и правила внутреннего распорядка.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.3.</strong> Основная цель деятельности Учреждения — охрана здоровья граждан. Все действия сотрудников должны соответствовать этой цели и осуществляться в рамках действующего законодательства.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.4.</strong> Правовую основу деятельности ЦГБ №7 составляют: Конституция РФ, Федеральный закон «Об охране здоровья» №29-ФЗ, Трудовой кодекс РФ и иные нормативные правовые акты.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.5.</strong> Незнание Устава, а также требований ФЗ «Об охране здоровья» №29-ФЗ и иных нормативных актов, не освобождает сотрудника от ответственности.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.6.</strong> Решения Главного врача в рамках его компетенции обязательны к исполнению и могут быть обжалованы в установленном порядке.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.7.</strong> Главный врач вправе издавать внутренние указы, приложения и регламенты, не противоречащие законодательству и настоящему Уставу, а также дополнять и изменять Устав в установленном порядке.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.8.</strong> Главный врач и его заместители применяют взыскания только за конкретные нарушения в порядке, установленном Трудовым кодексом и настоящим Уставом.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.9.</strong> За нарушение положений Устава применяются меры взыскания, предусмотренные Главой 9.</p></div>
+              <div class="charter-item"><p><strong>Статья 1.10.</strong> Руководящий и Старший состав Больницы может выполнять обязанности любых отделов и должностей ЦГБ №7.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 2. Иерархия и состав</div>
+              <div class="charter-item"><p><strong>Статья 2.1.</strong> Все сотрудники обязаны соблюдать внутреннюю иерархию.</p></div>
+              <div class="charter-item"><p><strong>Статья 2.2. Иерархия должностей ЦГБ №7:</strong><br>
+              Главный врач (ГВ) — высшее должностное лицо, в его подчинении находятся все сотрудники.<br>
+              Заместитель Главного врача (ЗГВ) — помощник Главного врача, замещает его в отсутствие.<br>
+              Заведующий отделением (ЗО) — руководит отделом и всеми его сотрудниками.<br>
+              Заместитель заведующего отделением (ЗЗО) — помощник заведующего по отделу.<br>
+              Врач высшей категории<br>Врач первой категории<br>Врач второй категории<br>Врач-Специалист<br>Ординатор<br>Фельдшер<br>Санитар<br>Фармацевт<br>Водитель скорой помощи</p></div>
+              <div class="charter-item"><p><strong>Статья 2.3.</strong> К старшему составу относятся: Главный врач, Заместители Главного врача, Заведующие отделениями, Заместители заведующих отделениями.<br><em>Примечание:</em> Все сотрудники обязаны выполнять распоряжения старшего состава независимо от отдела.</p></div>
+              <div class="charter-item"><p><strong>Статья 2.4.</strong> Главный врач — лицо, осуществляющее руководство деятельностью Учреждения, организующее лечебно-профилактическую, административно-хозяйственную и финансовую деятельность.</p></div>
+              <div class="charter-item"><p><strong>Статья 2.5.</strong> Заведующий отделением руководит работой отдела, контролирует деятельность его сотрудников и отвечает за выполнение недельной нормы. Заместитель заведующего выполняет его обязанности в его отсутствие.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 3. Структура ЦГБ №7</div>
+              <div class="charter-item"><p><strong>Статья 3.1. Администрация больницы (АБ)</strong> — осуществляет контроль за исполнением должностных обязанностей и работой больницы в целом.<br><em>Обязанности:</em><br>• поддержание дисциплины и бесперебойной работы;<br>• проведение проверок сотрудников на знание Устава и регламентов;<br>• проведение инвентаризаций и аудитов.</p></div>
+              <div class="charter-item"><p><strong>Статья 3.2. Отдел кадров (ОК)</strong> — занимается работой с персоналом, приёмом и обучением новых сотрудников.<br><em>Обязанности:</em><br>• проведение собеседований и обработка заявлений на стажировку;<br>• контроль интернатуры;<br>• организация лекций, агитаций и обучения.</p></div>
+              <div class="charter-item"><p><strong>Статья 3.3. Академия</strong> — подразделение Отдела кадров, в котором проводится первичное обучение новых сотрудников.</p></div>
+              <div class="charter-item"><p><strong>Статья 3.4. Отдел медицинской комиссии (ОМК)</strong> — оказывает общую медицинскую помощь населению и проводит медицинские комиссии.<br><em>Обязанности:</em><br>• санитарно-гигиенические и противоэпидемические мероприятия;<br>• экспертиза нетрудоспособности, направление на МСЭ;<br>• направление пациентов к специалистам и на госпитализацию;<br>• ведение аудита и наблюдение за состоянием пациентов;<br>• первичная медико-санитарная помощь взрослым и детям;<br>• профилактика, лечение, формирование ЗОЖ;<br>• выявление психо-неврологических отклонений;<br>• проведение предварительных и периодических медосмотров;<br>• выдача медицинских заключений, справок, листков нетрудоспособности.</p></div>
+              <div class="charter-item"><p><strong>Статья 3.5. Бригада скорой медицинской помощи (БСМП)</strong> — оказывает помощь по вызовам, осуществляет транспортировку пациентов.<br><em>Обязанности:</em><br>• круглосуточное реагирование на вызовы;<br>• транспортировка пострадавших между медучреждениями;<br>• неотложная помощь на догоспитальном этапе.</p></div>
+              <div class="charter-item"><p><strong>Статья 3.6. Иерархия отделений ЦГБ №7:</strong><br>1. Администрация больницы (АБ)<br>2. Отдел кадров (ОК)<br>3. Отдел медицинской комиссии (ОМК)<br>4. Бригада скорой медицинской помощи (БСМП)</p></div>
+            </div>
+
+            <div class="chapter-block">
+              <h3 id="sec2" class="chapter-header">Раздел II. ОБЯЗАННОСТИ, ЗАПРЕТЫ И РЕЖИМ ТРУДА</h3>
+              
+              <div style="font-weight:700; color:var(--text-main); margin: 15px 0 8px;">Глава 4. Основные обязанности сотрудников</div>
+              <div class="charter-item"><p><strong>Статья 4.1.</strong> Соблюдать Устав ЦГБ №7, законы РФ, правила пользования рацией и иные нормативные акты, а также следить за изменениями внутренних регламентов и лекций.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.2.</strong> Заботиться о репутации больницы, соблюдать субординацию, требования к внешнему виду (Глава 12) и врачебную тайну.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.3.</strong> Выполнять поручения руководства, если они не противоречат законодательству.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.4.</strong> Сотрудники АБ и ОК обязаны контролировать соблюдение правил, консультировать сотрудников и принимать меры к исправлению ошибок.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.5.</strong> При проведении процессуальных действий старший состав обязан прибыть по запросу.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.6.</strong> Предоставлять еженедельный отчёт о работе. Сроки устанавливаются Заведующим отделением. <em>Примечание:</em> Заведующий отделением обязан предоставлять еженедельный отчёт по отделу не позднее субботы. Главный врач вправе изменять сроки.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.7.</strong> Выполнять недельную норму, установленную Заведующим отделением (по согласованию с ГВ или ЗГВ).</p></div>
+              <div class="charter-item"><p><strong>Статья 4.8.</strong> Следовать ценовой политике больницы и уведомлять граждан о стоимости услуг. <em>Исключение:</em> осмотр.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.9.</strong> При нехватке сотрудников старший состав вправе привлекать сотрудников любых отделов к задачам. <em>Исключение:</em> сотрудники, занятые по вызову, и сотрудники Академии.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.10.</strong> Пройти стажировку в течение 5 дней с момента подписания трудового договора. При переводе в другое отделение — пройти трёхдневную стажировку.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.11.</strong> Носить стерильные перчатки и служебную форму своего отделения при исполнении обязанностей.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.12.</strong> Оказывать помощь на месте вызова. <em>Исключение:</em> отказ допускается при отсутствии аптечек, бензина, технических неполадках, угрозе жизни, перестрелке, недоступности пострадавшего.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.13.</strong> Сдавать внутренние экзамены и тесты для получения лицензий.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.14.</strong> Иметь при себе рацию и находиться на рабочей частоте.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.15.</strong> Знать и использовать тен-коды.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.16.</strong> Сообщать пациенту о проводимых процедурах и причинах отказа.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.17.</strong> Иметь действующую медицинскую карту и не иметь отклонений по здоровью.</p></div>
+              <div class="charter-item"><p><strong>Статья 4.18. Сотрудник вправе:</strong><br>• уволиться по собственному желанию;<br>• подать жалобу на коллегу с доказательствами (жалобы на старший состав рассматриваются ГВ или ЗГВ);<br>• оспорить дисциплинарное взыскание в порядке, установленном Главой 9.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 5. Запреты</div>
+              <div class="charter-item"><p><strong>Статья 5.1.</strong> Запрещено выпрашивать повышение или проверку отчётов.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.2.</strong> Запрещено спать вне специально отведённых мест.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.3.</strong> Запрещено самовольно покидать территорию больницы или прогуливать рабочее время. <em>Примечание:</em> нахождение без формы приравнивается к прогулу. <em>Исключение:</em> разрешение старшего состава.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.4.</strong> Запрещено игнорировать рацию и вызовы в рабочее время.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.5.</strong> Запрещено нарушать внутреннюю документацию и нормативные акты.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.6.</strong> Запрещено курить, употреблять алкоголь или наркотики в рабочее время.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.7.</strong> Запрещено разглашать служебную информацию посторонним.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.8.</strong> Запрещено хранить и носить оружие, боеприпасы, наркотики, алкоголь в рабочее время.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.9.</strong> Запрещено спать в автомобиле скорой помощи более 5 минут.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.10.</strong> Запрещено использовать служебный транспорт в личных целях.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.11.</strong> Запрещено перевозить гражданских лиц в служебном транспорте. <em>Исключение:</em> госпитализация.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.12.</strong> Запрещено отклоняться от ценовой политики больницы.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.13.</strong> Запрещено продавать имущество больницы.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.14.</strong> Запрещено получать личную выгоду за оказание или неоказание услуг.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.15.</strong> Запрещено приступать к работе при наличии активной переаттестации.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.16.</strong> Запрещено препятствовать работе других отделений или нарушать распорядок.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.17.</strong> Запрещено выдавать себя за сотрудника другой должности или отдела.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.18.</strong> Запрещено использовать музыкальные колонки на территории больницы.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.19.</strong> Запрещено повышать, переводить или запрашивать повышение сотрудника с действующим дисциплинарным взысканием.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.20.</strong> Запрещено уклоняться от проверок.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.21.</strong> Запрещено участвовать в несанкционированных мероприятиях и азартных играх в рабочее время.</p></div>
+              <div class="charter-item"><p><strong>Статья 5.22.</strong> Запрещено прогуливать поставки, которые выполняет ЦГБ №7 (ЦМС и ГСМО). <em>Примечание:</em> одобренный отпуск является уважительной причиной для неявки на поставку. Однако по приказу старшего состава, ГВ или ЗГВ сотрудники могут быть вызваны на поставку согласно статье 6.4 настоящего Устава. <em>Исключение:</em> сотрудники ОК в момент проведения собеседований, агитаций и экзаменов.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 6. Субординация и правила общения</div>
+              <div class="charter-item"><p><strong>Статья 6.1.</strong> Общение с коллегами и гражданами ведётся вежливо и тактично.</p></div>
+              <div class="charter-item"><p><strong>Статья 6.2.</strong> Приветствие старшего по должности и гражданского лица является нормой служебного этикета. <em>Пример:</em> «Доброго времени суток», «Приветствую».</p></div>
+              <div class="charter-item"><p><strong>Статья 6.3.</strong> Сотрудник обязан сохранять выдержку и доброжелательность при общении с гражданами, в том числе при их агрессивном поведении.</p></div>
+              <div class="charter-item"><p><strong>Статья 6.4.</strong> Приказы старших по должности выполняются беспрекословно, если они не противоречат законодательству РФ.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 7. Рабочий график</div>
+              <div class="charter-item"><p><strong>Статья 7.1. Основная деятельность ЦГБ №7 осуществляется по следующему графику:</strong><br>
+              Понедельник – Пятница: 10:00 – 21:00<br>
+              Суббота – Воскресенье: 10:00 – 20:00<br>
+              Праздничные дни: 10:00 – 18:00<br>
+              Обед: 13:00 – 14:00<br>
+              Ночное дежурство: 21:00 – 10:00</p></div>
+              <div class="charter-item"><p><strong>Статья 7.2.</strong> Сотрудник обязан следовать установленному графику. <em>Примечание:</em> по окончании смены разрешено продолжить работу по желанию. Ночное дежурство осуществляется на добровольной основе.</p></div>
+              <div class="charter-item"><p><strong>Статья 7.3. Специальный график Отдела кадров.</strong> Приём и собеседования с кандидатами проводятся в промежутки: с 16:30 до 17:00; с 20:30 до 21:00. В указанное время сотрудники ОК обязаны находиться на рабочем месте и проводить собеседования с абитуриентами.</p></div>
+              <div class="charter-item"><p><strong>Статья 7.4.</strong> Проведение лекций, участие в поставках и иных мероприятиях ЦГБ №7 обязательно для сотрудников ОК вне зависимости от графика, установленного статьёй 7.3. Отказ от участия расценивается как нарушение трудовой дисциплины и влечёт меры, предусмотренные Главой 9.</p></div>
+              <div class="charter-item"><p><strong>Статья 7.5.</strong> Сотрудник обязан явиться на рабочее место в часы, не предусмотренные графиком, в случае крайней необходимости по требованию ГВ, ЗГВ или старшего состава.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 8. Отдых, отпуск и перерывы</div>
+              <div class="charter-item"><p><strong>Статья 8.1.</strong> Время отдыха регулируется настоящим Уставом и Трудовым кодексом РФ. Виды отдыха: обеденный перерыв, дополнительный перерыв, отпуск.</p></div>
+              <div class="charter-item"><p><strong>Статья 8.2.</strong> Обеденный перерыв предоставляется ежедневно с 13:00 до 14:00 и не требует дополнительного согласования.</p></div>
+              <div class="charter-item"><p><strong>Статья 8.3.</strong> Дополнительный перерыв (от 30 до 60 минут) может быть взят по согласованию с руководством. <em>Примечание:</em> заявка подаётся не менее чем за 10 минут до начала перерыва. Максимум — один дополнительный перерыв за смену. Запрещено брать перерыв в первый и последний час смены.</p></div>
+              <div class="charter-item"><p><strong>Статья 8.4.</strong> Отпуск предоставляется согласно Трудовому кодексу РФ.</p></div>
+              <div class="charter-item"><p><strong>Статья 8.5.</strong> Отсутствие на рабочем месте без отпуска в течение недели может повлечь увольнение (см. ст. 9.6).</p></div>
+            </div>
+
+            <div class="chapter-block">
+              <h3 id="sec3" class="chapter-header">Раздел III. ДИСЦИПЛИНА И КАДРЫ</h3>
+              
+              <div style="font-weight:700; color:var(--text-main); margin: 15px 0 8px;">Глава 9. Дисциплинарные взыскания</div>
+              <div class="charter-item"><p><strong>Статья 9.1.</strong> Правом наложения дисциплинарных взысканий обладают: Главный врач, Заместитель Главного врача, сотрудники Администрации больницы, Старший состав.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.2. Виды взысканий:</strong><br>• Предупреждение — за малые нарушения.<br>• Выговор — за более серьёзные нарушения.<br>• Увольнение — высшая мера.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.3. Предупреждение выдаётся за:</strong><br>• сон в неположенном месте;<br>• игнорирование рации (повторно — выговор);<br>• негрубое нарушение Устава.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.4. Выговор выдаётся за:</strong><br>• игнорирование рации;<br>• сон в рабочее время;<br>• нарушение субординации;<br>• нарушение Устава;<br>• нарушение нормативно-правовых актов КФО;<br>• сон в автомобиле БСМП более 5 минут;<br>• использование транспорта в личных целях.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.5.</strong> Сотрудники Администрации больницы, Заместитель Главного врача и Главный врач вправе выбирать вид дисциплинарного взыскания, основываясь на тяжести и умысле нарушения.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.6. Увольнение назначается по следующим основаниям:</strong><br>• ликвидация организации;<br>• сокращение штата;<br>• несоответствие квалификации по результатам переаттестации;<br>• три выговора;<br>• отсутствие на рабочем месте без отпуска более недели;<br>• профнепригодность;<br>• разжигание конфликтов;<br>• иные случаи, предусмотренные законом.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.7.</strong> Сотрудник вправе оспорить взыскание. Жалобы рассматриваются Главным врачом или Заместителем Главного врача.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.8.</strong> Взыскание может быть снято досрочно ГВ или ЗГВ за проявленную активность и добросовестную работу.</p></div>
+              <div class="charter-item"><p><strong>Статья 9.9.</strong> При выявлении признаков нарушения законодательства или Устава может быть инициировано служебное расследование. На его период сотрудник может быть временно отстранён от обязанностей приказом Главного врача.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 10. Увольнение, восстановление, повышение, перевод и переаттестация</div>
+              <div class="charter-item"><p><strong>Статья 10.1.</strong> Увольнение по собственному желанию. При наличии активного взыскания — с занесением в ЧС.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.2.</strong> Восстановление невозможно при наличии в ЧС, запрете на работу в госструктурах, активной судимости, отсутствии медкарты, наркотической или алкогольной зависимости.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.3. Порядок восстановления:</strong><br>• принимается на две должности ниже;<br>• максимальная должность при восстановлении — Врач высшей категории;<br>• восстановление возможно только при наличии документов;<br>• после восстановления — переаттестация в течение 24 часов.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.4.</strong> Повышения осуществляются на основании отчётов. Критерии повышения устанавливаются Заведующими отделений по согласованию с ГВ.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.5.</strong> Повышение более одного раза в сутки запрещено.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.6.</strong> Сотрудник обязан проходить переаттестации и тесты.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.7.</strong> Стажировка проходится в течение 5 дней с момента подписания трудового договора.</p></div>
+              <div class="charter-item"><p><strong>Статья 10.8.</strong> Перевод между отделами осуществляется с одобрения руководства обоих отделов. Сотрудник с действующим взысканием не может быть переведён (см. ст. 5.19).</p></div>
+            </div>
+
+            <div class="chapter-block">
+              <h3 id="sec4" class="chapter-header">Раздел IV. СЛУЖЕБНАЯ ДЕЯТЕЛЬНОСТЬ</h3>
+              
+              <div style="font-weight:700; color:var(--text-main); margin: 15px 0 8px;">Глава 11. Правила пользования рацией</div>
+              <div class="charter-item"><p><strong>Статья 11.1.</strong> Запрещено выяснять отношения, материться, засорять рацию, кричать.</p></div>
+              <div class="charter-item"><p><strong>Статья 11.2.</strong> Запрещено обсуждать политику, религию, личные проблемы на общих каналах.</p></div>
+              <div class="charter-item"><p><strong>Статья 11.3.</strong> Запрещена продажа чего-либо через рацию.</p></div>
+              <div class="charter-item"><p><strong>Статья 11.4.</strong> Запрещено отключать рацию вне рабочего дня.</p></div>
+              <div class="charter-item"><p><strong>Статья 11.5.</strong> При общении обязательно использование тен-кодов.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 12. Внешний вид сотрудников</div>
+              <div class="charter-item"><p><strong>Статья 12.1.</strong> Сотрудники обязаны носить служебную форму в соответствии с Уставом, внутренними приказами и нормами МСПТ.</p></div>
+              <div class="charter-item"><p><strong>Статья 12.2.</strong> Внешний вид должен соответствовать Федеральному закону «О государственной службе» №54-ФЗ.</p></div>
+              <div class="charter-item"><p><strong>Статья 12.3.</strong> Разрешены аксессуары делового стиля, соответствующие форме или близкие ей по цвету. <em>Исключение:</em> часы и браслеты могут быть любого цвета. Для мужчин: кожаные перчатки, часы, аккуратные серьги, классические очки или линзы. Для женщин: дневной макияж, кожаные перчатки, аккуратные серьги, классические очки или линзы.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 13. Осуществление рабочей деятельности</div>
+              <div class="charter-item"><p><strong>Статья 13.1.</strong> Запрещено игнорировать вызовы о помощи. <em>Исключение:</em> сотрудники ОК (во время собеседований), сотрудники Академии, занятые на поставках и мероприятиях.</p></div>
+              <div class="charter-item"><p><strong>Статья 13.2.</strong> Запрещено игнорировать граждан и госслужащих, нуждающихся в помощи.</p></div>
+              <div class="charter-item"><p><strong>Статья 13.3. Принципы работы сотрудников:</strong><br>• немедленная помощь государственным служащим при наличии на месте;<br>• помощь всем гражданам без дискриминации;<br>• честное выполнение трудовых обязанностей;<br>• соблюдение трудового распорядка и дисциплины;<br>• выполнение норм труда;<br>• соблюдение требований безопасности;<br>• исполнение работы безопасными методами.</p></div>
+
+              <div style="font-weight:700; color:var(--text-main); margin: 20px 0 8px;">Глава 14. Профилактические проверки сотрудников</div>
+              <div class="charter-item"><p><strong>Статья 14.1.</strong> Проверки проводятся сотрудниками АБ и старшим составом. Включают проверку медицинских карт и состояния сотрудников.</p></div>
+              <div class="charter-item"><p><strong>Статья 14.2.</strong> Проверке подлежат все сотрудники ЦГБ №7.</p></div>
+              <div class="charter-item"><p><strong>Статья 14.3.</strong> Проверки внеплановые и проводятся в любое рабочее время.</p></div>
+              <div class="charter-item"><p><strong>Статья 14.4. Этапы проверки:</strong><br>• проверка актуальности медицинских карт;<br>• проверка состояния сотрудников на наличие алкоголя или наркотиков.</p></div>
+              <div class="charter-item"><p><strong>Статья 14.5.</strong> При выявлении нарушений сотрудник обязан устранить их в неотложном порядке.</p></div>
+            </div>
+          </div>
+
+          <div style="margin-top: 30px; font-style: italic; color: var(--text-muted); text-align: center; font-size: 0.9rem;">
+            Устав может быть дополнен и изменён Главным врачом в установленном порядке.
+          </div>
+
+          <div id="noCharterResults" class="no-results" style="display: none;">По вашему запросу ничего не найдено в устве</div>
+        </div>
+      </div>
+
+      <!-- 7. Академия -->
+      <div id="tab-academy" class="tab-pane">
+        
+        <div class="academy-steps">
+          <div class="academy-tab active" id="acadTab1" onclick="switchAcademyStep(1)">1. Изучение лекции</div>
+          <div class="academy-tab locked" id="acadTab2" onclick="switchAcademyStep(2)">2. Экзамен (Тест)</div>
+          <div class="academy-tab locked" id="acadTab3" onclick="switchAcademyStep(3)">3. Итог экзамена</div>
+        </div>
+
+        <div id="acadPane1" class="academy-pane-content">
+          <div class="section-block">
+            <div class="section-title">🔐 Авторизация проходящего академию</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Ваше Имя Фамилия</label>
+                <input type="text" id="cadetName" class="form-control" placeholder="Иван Иванов">
+              </div>
+              <div class="form-group">
+                <label>Ваш Статический ID</label>
+                <input type="text" id="cadetStatic" class="form-control" placeholder="12345">
+              </div>
+              <div class="form-group">
+                <label>Имя Экзаменатора</label>
+                <input type="text" id="examinerName" class="form-control" placeholder="Алексей Смирнов">
+              </div>
+              <div class="form-group">
+                <label>Пароль от лекции</label>
+                <input type="password" id="lecturePass" class="form-control" placeholder="Введите пароль">
+              </div>
+            </div>
+            <button class="btn-action" onclick="unlockLecture()">Подтвердить и разблокировать лекцию</button>
+          </div>
+
+          <div id="lectureContent" style="opacity: 0.3; pointer-events: none; transition: opacity 0.3s;">
+            <div class="section-block">
+              <div class="section-title">📖 Официальная лекция для повышения квалификации (Презентация)</div>
+              <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.9rem;">Изучите слайды презентации ниже, перелистывая их прямо в окне плеера:</p>
+              
+              <div style="position: relative; width: 100%; height: 480px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #000;">
+                <iframe src="https://docs.google.com/presentation/d/1WWIufX8fY_ahI_75kAwnCey1P-zCTMlXlTR9Hef77MM/embed?start=false&loop=false&delayms=3000" frameborder="0" width="100%" height="100%" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+              </div>
+
+              <button class="btn-action" style="background: var(--success); margin-top: 20px;" onclick="completeLecture()">Я ознакомился с лекцией и готов к экзамену</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="acadPane2" class="academy-pane-content" style="display: none;">
+          <div class="section-block" id="examAuthBlock">
+            <div class="section-title">🔐 Авторизация экзаменатора</div>
+            <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">Для разблокировки экзаменационных вопросов введите пароль экзаменатора:</p>
+            <div class="form-group" style="margin-bottom: 15px;">
+              <input type="password" id="examPassInput" class="form-control" placeholder="Введите пароль экзаменатора">
+            </div>
+            <button class="btn-action" onclick="unlockExam()">Разблокировать экзамен</button>
+          </div>
+
+          <div id="examQuestionsContainer" style="display: none;">
+            <div class="section-title">📝 Экзаменационное тестирование</div>
+            <p id="examInfoText" style="color: var(--primary-solid); font-weight: 600; margin-bottom: 20px; font-size: 0.95rem;"></p>
+
+            <div id="shuffledQuizWrapper"></div>
+
+            <button class="btn-action" onclick="submitExam()">Сдать экзамен и посмотреть итог</button>
+          </div>
+        </div>
+
+        <!-- Страница 3: Итог экзамена -->
+        <div id="acadPane3" class="academy-pane-content" style="display: none;">
+          <div class="exam-result-card">
+            <h3 id="examResultHeading">Итоги экзаменационного тестирования</h3>
+            <div class="exam-result-info">
+              <div>Курсант: <span id="resCadetName">-</span></div>
+              <div>Статический ID: <span id="resCadetStatic">-</span></div>
+              <div>Экзаменатор: <span id="resExaminerName">-</span></div>
+              <div>Результат: <span id="resScoreText">-</span></div>
+              <div>Статус: <span id="resStatusText">-</span></div>
+            </div>
+            <button class="btn-action" onclick="resetExam()">Пройти экзамен заново</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  let currentTab = 'memo';
+  let academyState = { name: '', staticId: '', examiner: '', lectureDone: false, examUnlocked: false };
+  const PASSWORD_LECTURE = "лекция7";
+  const PASSWORD_EXAM = "экзамен7";
+
+  const allQuizQuestions = [
+    {
+      id: "q1",
+      question: "Куда вносятся средства за оформление медицинских справок и книжек?",
+      options: [
+        { text: "Оставляются себе в качестве премии", correct: false },
+        { text: "На счет фракции через приложение в телефоне", correct: true },
+        { text: "Передаются наличными главному врачу", correct: false }
+      ]
+    },
+    {
+      id: "q2",
+      question: "Какова приоритетность оказания помощи пострадавшим в бессознательном состоянии?",
+      options: [
+        { text: "Сначала криминальные структуры, затем граждане", correct: false },
+        { text: "Госструктуры, гражданские, криминальные структуры", correct: true },
+        { text: "Очередность не имеет никакого значения", correct: false }
+      ]
+    },
+    {
+      id: "q3",
+      question: "Каковы действия врача при выдаче справки от нарколога сотруднику силовой структуры?",
+      options: [
+        { text: "Выдать справку без лишних вопросов", correct: false },
+        { text: "Уточнить, применял ли он «Военное обезболивающее» за последние 24 часа", correct: true },
+        { text: "Сразу отказать без объяснения причин", correct: false }
+      ]
+    },
+    {
+      id: "q4",
+      question: "Какой обязательный вопрос задается пациенту перед выдачей таблеток в плановом порядке?",
+      options: [
+        { text: "Имеются ли у вас аллергические реакции на лекарственные препараты?", correct: true },
+        { text: "Кем вы работаете?", correct: false },
+        { text: "Сколько у вас денег?", correct: false }
+      ]
+    },
+    {
+      id: "q5",
+      question: "Разрешено ли выдавать обезболивающее после реанимации без сбора аллергологического анамнеза?",
+      options: [
+        { text: "Да, обезболивающее общего спектра разрешено выдавать сразу", correct: true },
+        { text: "Нет, сбор анамнеза обязателен в абсолютно любых ситуациях", correct: false },
+        { text: "Разрешено выдавать любые таблетки без исключения", correct: false }
+      ]
+    },
+    {
+      id: "q6",
+      question: "Какова стоимость оформления новой медицинской книжки (ЛМК)?",
+      options: [
+        { text: "10 000 рублей", correct: false },
+        { text: "30 000 рублей", correct: true },
+        { text: "50 000 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q7",
+      question: "Какова стоимость продления существующей медицинской книжки (ЛМК)?",
+      options: [
+        { text: "10 000 рублей", correct: true },
+        { text: "20 000 рублей", correct: false },
+        { text: "30 000 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q8",
+      question: "Какова стоимость оформления новой справки от нарколога?",
+      options: [
+        { text: "30 000 рублей", correct: false },
+        { text: "50 000 рублей", correct: true },
+        { text: "100 000 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q9",
+      question: "Какова стоимость продления справки от нарколога?",
+      options: [
+        { text: "10 000 рублей", correct: false },
+        { text: "20 000 рублей", correct: true },
+        { text: "30 000 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q10",
+      question: "Каковы допустимые локации в больнице для проведения медосмотров и выдачи ЛМК/справок?",
+      options: [
+        { text: "Холл первого этажа или коридор", correct: false },
+        { text: "Манипуляционная или кабинет терапевта", correct: true },
+        { text: "Столовая или ординаторская", correct: false }
+      ]
+    },
+    {
+      id: "q11",
+      question: "Какое основное средство используется для реанимации пострадавших?",
+      options: [
+        { text: "Шприц с адреналином", correct: false },
+        { text: "Дефибриллятор", correct: true },
+        { text: "Бинт и жгут", correct: false }
+      ]
+    },
+    {
+      id: "q12",
+      question: "Что обязан сделать врач перед реанимацией, если тело находится в зоне активной перестрелки?",
+      options: [
+        { text: "Оставить тело на месте и ждать окончания стрельбы", correct: false },
+        { text: "Предварительно переместить тело в безопасную зону", correct: true },
+        { text: "Начать реанимацию прямо под пулями", correct: false }
+      ]
+    },
+    {
+      id: "q13",
+      question: "Что такое исключение Power Gaming при оказании первой помощи?",
+      options: [
+        { text: "Приказ вооруженных лиц под угрозой оружия не оказывать помощь конкретному лицу", correct: true },
+        { text: "Отказ пациента от лечения", correct: false },
+        { text: "Отсутствие медицинских препаратов у врача", correct: false }
+      ]
+    },
+    {
+      id: "q14",
+      question: "Какой размер премии автоматически начисляется сотруднику за выдачу ЛМК?",
+      options: [
+        { text: "1 750 рублей", correct: false },
+        { text: "3 000 рублей", correct: true },
+        { text: "5 000 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q15",
+      question: "Какой размер премии начисляется сотруднику за выдачу справки от нарколога?",
+      options: [
+        { text: "1 750 рублей", correct: true },
+        { text: "3 000 рублей", correct: false },
+        { text: "4 500 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q16",
+      question: "Какой размер премии начисляется за выдачу таблеток пациенту?",
+      options: [
+        { text: "320 рублей", correct: false },
+        { text: "640 рублей", correct: true },
+        { text: "1 000 рублей", correct: false }
+      ]
+    },
+    {
+      id: "q17",
+      question: "Что требуется сделать сразу после успешной выдачи документа или оказания услуги?",
+      options: [
+        { text: "Сделать скриншот системного уведомления для отчета", correct: true },
+        { text: "Удалить игру", correct: false },
+        { text: "Выйти из больницы без доклада", correct: false }
+      ]
+    },
+    {
+      id: "q18",
+      question: "Каковы временные рамки запрета на выдачу справки от нарколога после приема «Военного обезболивающего»?",
+      options: [
+        { text: "Последние 2 часа", correct: false },
+        { text: "Последние 24 часа", correct: true },
+        { text: "Последняя неделя", correct: false }
+      ]
+    },
+    {
+      id: "q19",
+      question: "Разрешается ли сотруднику хранить наличные деньги за услуги в личных карманах?",
+      options: [
+        { text: "Да, разрешено оставлять себе в качестве надбавки", correct: false },
+        { text: "Строго запрещено, деньги немедленно вносятся на счет фракции", correct: true },
+        { text: "Разрешено до конца рабочей смены", correct: false }
+      ]
+    },
+    {
+      id: "q20",
+      question: "Какая статья устава регламентирует запрет на присвоение имущества и денег больницы?",
+      options: [
+        { text: "Пункт 4.4.1 правил государственных организаций", correct: true },
+        { text: "Статья 1.1 устава", correct: false },
+        { text: "Статья 11.5 устава", correct: false }
+      ]
+    },
+    {
+      id: "q21",
+      question: "Каковы часы работы обеденного перерыва в ЦГБ №7 по будням?",
+      options: [
+        { text: "С 12:00 до 13:00", correct: false },
+        { text: "С 13:00 до 14:00", correct: true },
+        { text: "С 14:00 до 15:00", correct: false }
+      ]
+    },
+    {
+      id: "q22",
+      question: "Какие документы обязан предоставить пациент для оформления ЛМК или справки?",
+      options: [
+        { text: "Только водительские права", correct: false },
+        { text: "Паспорт нового образца (и старую книжку/справку при продлении)", correct: true },
+        { text: "Никаких документов не требуется", correct: false }
+      ]
+    },
+    {
+      id: "q23",
+      question: "Каков срок прохождения стажировки для нового сотрудника после подписания договора?",
+      options: [
+        { text: "В течение 3 дней", correct: false },
+        { text: "В течение 5 дней", correct: true },
+        { text: "В течение месяца", correct: false }
+      ]
+    },
+    {
+      id: "q24",
+      question: "Разрешено ли спать в автомобиле скорой помощи (БСМП) более 5 минут?",
+      options: [
+        { text: "Да, сколько угодно", correct: false },
+        { text: "Строго запрещено (карается выговором)", correct: true },
+        { text: "Разрешено ночью", correct: false }
+      ]
+    },
+    {
+      id: "q25",
+      question: "Какая наивысшая мера дисциплинарного взыскания предусмотрена уставом ЦГБ №7?",
+      options: [
+        { text: "Предупреждение", correct: false },
+        { text: "Выговор", correct: false },
+        { text: "Увольнение", correct: true }
+      ]
+    }
+  ];
+
+  const medicalData = [
+    { symptom: "Головная боль", meds: "Миг / Пенталгин / Цитрамон", type: "Таблетки" },
+    { symptom: "Обезболивающее", meds: "Нурофен / Спазмалгон / Дексонал", type: "Таблетки / Суспензия" },
+    { symptom: "Успокоительное", meds: "Афобазол / Ново-пассит / Пустырник-Форте", type: "Таблетки" },
+    { symptom: "Ожоги", meds: "Пантенол / Солкосерил / Декспантенол", type: "Крем-пенка / Мазь" },
+    { symptom: "Простуда и жар", meds: "Терафлю / Колдрекс / Антигриппин", type: "Порошок / Таблетки" },
+    { symptom: "Насморк", meds: "Називин / Тизин / Риностоп", type: "Капли / Спрей" },
+    { symptom: "Боль в горле", meds: "Гексорал / Граммидин / Стрепсилс", type: "Спрей / Таблетки" },
+    { symptom: "Боль в глазах", meds: "Визин / Тауфон / Тобрекс", type: "Капли" },
+    { symptom: "Боль в животе", meds: "Ношпа / Пенталгин / Смекта", type: "Таблетки / Суспензия" },
+    { symptom: "Диарея", meds: "Лоперамид / Лопедиус / Энтерофурил", type: "Таблетки / Капсулы" },
+    { symptom: "Отравление", meds: "Энтеродез / Энтеросгель / Смекта", type: "Порошок / Паста" },
+    { symptom: "Тошнота / Рвота", meds: "Церукал / Метоклопрамид / Пассажикс", type: "Таблетки" },
+    { symptom: "Запор", meds: "Гутталакс / Сенаде / Дюфалак", type: "Таблетки / Сироп" },
+    { symptom: "Боль в сердце", meds: "Корвалол / Валокордин / Валидол", type: "Таблетки / Капли" },
+    { symptom: "Витамины", meds: "Аскорбинка / Компливит / Глицин", type: "Драже / Таблетки" }
+  ];
+
+  const priceData = [
+    { service: "Получение новой медицинской книжки", price: "30.000 руб. 00 коп." },
+    { service: "Актуализация медицинской книжки", price: "10.000 руб. 00 коп." },
+    { service: "Сдача анализов у нарколога и выдача справки", price: "50.000 руб. 00 коп." },
+    { service: "Актуализация справки от нарколога", price: "20.000 руб. 00 коп." },
+    { service: "Приём и осмотр у терапевта", price: "10.000 руб. 00 коп." },
+    { service: "Приём и осмотр у хирурга", price: "10.000 руб. 00 коп." },
+    { service: "Приём и осмотр у стоматолога", price: "30.000 руб. 00 коп." },
+    { service: "Приём и осмотр у отоларинголога", price: "10.000 руб. 00 коп." },
+    { service: "Приём и осмотр у офтальмолога", price: "10.000 руб. 00 коп." },
+    { service: "Приём и осмотр у кардиолога", price: "15.000 руб. 00 коп." },
+    { service: "Приём и осмотр у невролога", price: "20.000 руб. 00 коп." },
+    { service: "Приём и осмотр у онколога", price: "20.000 руб. 00 коп." },
+    { service: "Приём и осмотр у эндокринолога", price: "15.000 руб. 00 коп." },
+    { service: "Приём и осмотр у аллерголога", price: "35.000 руб. 00 коп." },
+    { service: "Приём и осмотр у ревматолога", price: "20.000 руб. 00 коп." },
+    { service: "Приём и осмотр у гастроэнтеролога", price: "25.000 руб. 00 коп." },
+    { service: "Приём и осмотр у дерматолога", price: "20.000 руб. 00 коп." },
+    { service: "Приём и осмотр у гинеколога", price: "30.000 руб. 00 коп." },
+    { service: "Приём и осмотр у уролога", price: "35.000 руб. 00 коп." },
+    { service: "Приём и осмотр у травматолога", price: "10.000 руб. 00 коп." }
+  ];
+
+  setTimeout(() => {
+    const preloader = document.getElementById('preloader');
+    if(preloader) preloader.classList.add('fade-out');
+  }, 1000);
+
+  window.addEventListener('DOMContentLoaded', () => {
+    renderMedTable(medicalData);
+    renderPriceTable(priceData);
+  });
+
+  function showNotification(title, desc, type = 'info') {
+    const container = document.getElementById('notification-container');
+    const notif = document.createElement('div');
+    notif.className = `custom-notification ${type}`;
+    notif.innerHTML = `<div class="notif-title">${title}</div><div class="notif-desc">${desc}</div>`;
+    container.appendChild(notif);
+    setTimeout(() => {
+      notif.style.animation = 'fadeOutAnim 0.25s forwards';
+      setTimeout(() => notif.remove(), 250);
+    }, 3500);
+  }
+
+  function renderMedTable(data) {
+    const tbody = document.getElementById('medTableBody');
+    tbody.innerHTML = data.length ? data.map(i => `<tr><td class="symptom-tag">${i.symptom}</td><td class="med-name">${i.meds}</td><td>${i.type}</td></tr>`).join('') : `<tr><td colspan="3" class="no-results">Ничего не найдено</td></tr>`;
+  }
+
+  function renderPriceTable(data) {
+    const tbody = document.getElementById('priceTableBody');
+    tbody.innerHTML = data.length ? data.map(i => `<tr><td class="service-name">${i.service}</td><td class="price-value">${i.price}</td></tr>`).join('') : `<tr><td colspan="2" class="no-results">Ничего не найдено</td></tr>`;
+  }
+
+  function switchTab(tabName, btnElement) {
+    currentTab = tabName;
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+    if(btnElement) btnElement.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+
+    const titles = {
+      'memo': 'Памятка по препаратам',
+      'price': 'Прайс-лист медицинских услуг',
+      'pmp': 'Правила оказания первой медицинской помощи (ПМП)',
+      'lmk': 'Регламент выдачи и продления ЛМК',
+      'narko': 'Регламент справок от нарколога',
+      'charter': 'Внутренний устав ЦГБ №7',
+      'academy': 'Академия — Повышение квалификации'
+    };
+    document.getElementById('headerTitle').innerText = titles[tabName] || 'Портал сотрудников';
+
+    const searchWrapper = document.getElementById('searchWrapper');
+    searchWrapper.style.display = (tabName === 'memo' || tabName === 'price' || tabName === 'charter') ? 'block' : 'none';
+  }
+
+  function handleSearch() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    if(currentTab === 'memo') {
+      renderMedTable(medicalData.filter(i => (i.symptom + i.meds + i.type).toLowerCase().includes(q)));
+    } else if(currentTab === 'price') {
+      renderPriceTable(priceData.filter(i => (i.service + i.price).toLowerCase().includes(q)));
+    } else if(currentTab === 'charter') {
+      filterCharter(q);
+    }
+  }
+
+  function filterCharter(rawQuery) {
+    const items = document.querySelectorAll('.charter-item');
+    const chapterBlocks = document.querySelectorAll('.chapter-block');
+    const toc = document.getElementById('charterToc');
+    const noResults = document.getElementById('noCharterResults');
+
+    if (!rawQuery) {
+      items.forEach(item => item.classList.remove('hidden', 'highlight'));
+      chapterBlocks.forEach(block => block.style.display = 'block');
+      toc.style.display = 'block';
+      noResults.style.display = 'none';
+      return;
+    }
+
+    toc.style.display = 'none';
+    let totalVisible = 0;
+
+    chapterBlocks.forEach(block => {
+      let blockVisibleCount = 0;
+      const blockItems = block.querySelectorAll('.charter-item');
+
+      blockItems.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(rawQuery)) {
+          item.classList.remove('hidden');
+          item.classList.add('highlight');
+          blockVisibleCount++;
+          totalVisible++;
+        } else {
+          item.classList.add('hidden');
+          item.classList.remove('highlight');
+        }
+      });
+      block.style.display = blockVisibleCount > 0 ? 'block' : 'none';
+    });
+    noResults.style.display = totalVisible === 0 ? 'block' : 'none';
+  }
+
+  function unlockLecture() {
+    const name = document.getElementById('cadetName').value.trim();
+    const stat = document.getElementById('cadetStatic').value.trim();
+    const exam = document.getElementById('examinerName').value.trim();
+    const pass = document.getElementById('lecturePass').value.trim();
+
+    if(!name || !stat || !exam) {
+      showNotification('Ошибка', 'Заполните все личные данные курсанта и экзаменатора!', 'error');
+      return;
+    }
+    if(pass !== PASSWORD_LECTURE) {
+      showNotification('Ошибка доступа', 'Неверный пароль лекции.', 'error');
+      return;
+    }
+
+    academyState.name = name;
+    academyState.staticId = stat;
+    academyState.examiner = exam;
+
+    document.getElementById('lectureContent').style.opacity = '1';
+    document.getElementById('lectureContent').style.pointerEvents = 'auto';
+    showNotification('Успешно', 'Пароль принят. Лекция разблокирована.', 'success');
+  }
+
+  function completeLecture() {
+    academyState.lectureDone = true;
+    document.getElementById('acadTab2').classList.remove('locked');
+    document.getElementById('examInfoText').innerText = `Курсант: ${academyState.name} [${academyState.staticId}] | Экзаменатор: ${academyState.examiner}`;
+    switchAcademyStep(2);
+    showNotification('Прогресс сохранен', 'Переход к экзаменационному тестированию.', 'success');
+  }
+
+  function switchAcademyStep(step) {
+    if(step === 2 && !academyState.lectureDone) {
+      showNotification('Доступ заблокирован', 'Сначала необходимо ознакомиться с материалом лекции!', 'error');
+      return;
+    }
+    document.getElementById('acadTab1').classList.toggle('active', step === 1);
+    document.getElementById('acadTab2').classList.toggle('active', step === 2);
+    document.getElementById('acadTab3').classList.toggle('active', step === 3);
+
+    document.getElementById('acadPane1').style.display = step === 1 ? 'block' : 'none';
+    document.getElementById('acadPane2').style.display = step === 2 ? 'block' : 'none';
+    document.getElementById('acadPane3').style.display = step === 3 ? 'block' : 'none';
+  }
+
+  function unlockExam() {
+    const pass = document.getElementById('examPassInput').value.trim();
+    if(pass !== PASSWORD_EXAM) {
+      showNotification('Ошибка', 'Неверный пароль экзаменатора!', 'error');
+      return;
+    }
+
+    academyState.examUnlocked = true;
+    document.getElementById('examAuthBlock').style.display = 'none';
+    document.getElementById('examQuestionsContainer').style.display = 'block';
+    
+    generateShuffledQuiz();
+    showNotification('Успешно', 'Экзамен разблокирован.', 'success');
+  }
+
+  function shuffleArray(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function generateShuffledQuiz() {
+    const container = document.getElementById('shuffledQuizWrapper');
+    container.innerHTML = '';
+
+    const shuffledQuestions = shuffleArray(allQuizQuestions);
+
+    shuffledQuestions.forEach((q, index) => {
+      const shuffledOptions = shuffleArray(q.options);
+
+      let optionsHtml = shuffledOptions.map(opt => `
+        <label class="quiz-label">
+          <input type="radio" name="${q.id}" value="${opt.correct ? 'correct' : 'wrong'}"> ${opt.text}
+        </label>
+      `).join('');
+
+      let boxHtml = `
+        <div class="quiz-box">
+          <h4>${index + 1}. ${q.question}</h4>
+          <div class="quiz-options">
+            ${optionsHtml}
+          </div>
+        </div>
+      `;
+      container.innerHTML += boxHtml;
+    });
+  }
+
+  function submitExam() {
+    const boxes = document.querySelectorAll('.quiz-box');
+    let answeredCount = 0;
+    let correctCount = 0;
+
+    boxes.forEach(box => {
+      const radios = box.querySelectorAll('input[type="radio"]');
+      let boxAnswered = false;
+      radios.forEach(r => {
+        if(r.checked) {
+          boxAnswered = true;
+          if(r.value === 'correct') {
+            correctCount++;
+          }
+        }
+      });
+      if(boxAnswered) answeredCount++;
+    });
+
+    if(answeredCount < boxes.length) {
+      showNotification('Внимание', 'Ответьте на все 25 вопросов экзамена!', 'error');
+      return;
+    }
+
+    // Заполняем данные на странице итогов
+    document.getElementById('resCadetName').innerText = academyState.name || 'Не указано';
+    document.getElementById('resCadetStatic').innerText = academyState.staticId || '-';
+    document.getElementById('resExaminerName').innerText = academyState.examiner || 'Не указано';
+    document.getElementById('resScoreText').innerText = `${correctCount} из 25 (проходной балл: 18)`;
+
+    const isPassed = correctCount >= 18;
+    const statusSpan = document.getElementById('resStatusText');
+    statusSpan.innerText = isPassed ? 'СДАН (Успешно)' : 'НЕ СДАН (Повторите материал)';
+    statusSpan.style.color = isPassed ? 'var(--success)' : 'var(--danger)';
+
+    // Разблокируем вкладку итогов и переключаемся на нее
+    document.getElementById('acadTab3').classList.remove('locked');
+    switchAcademyStep(3);
+
+    if(isPassed) {
+      showNotification('Результат', `Экзамен успешно сдан (${correctCount}/25).`, 'success');
+    } else {
+      showNotification('Ошибка', `Экзамен не пройден (${correctCount}/25).`, 'error');
+    }
+  }
+
+  function resetExam() {
+    document.getElementById('examAuthBlock').style.display = 'block';
+    document.getElementById('examQuestionsContainer').style.display = 'none';
+    document.getElementById('examPassInput').value = '';
+    document.getElementById('acadTab3').classList.add('locked');
+    switchAcademyStep(2);
+  }
+
+  function toggleTheme() {
+    const body = document.body;
+    const checkbox = document.getElementById('themeToggleCheckbox');
+    if(checkbox.checked) {
+      body.setAttribute('data-theme', 'light');
+    } else {
+      body.setAttribute('data-theme', 'dark');
+    }
+  }
+</script>
+
+</body>
+</html>

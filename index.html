@@ -79,7 +79,7 @@
       transition: opacity 0.4s ease, visibility 0.4s ease;
     }
     #preloader.fade-out { opacity: 0; visibility: hidden; }
-    .loader-logo { width: 75px; }
+    .loader-logo { width: 75px; height: auto; object-fit: contain; }
 
     /* Всплывающие уведомления */
     #notification-container {
@@ -142,7 +142,7 @@
       align-items: center;
       gap: 12px;
     }
-    .sidebar-logo { height: 42px; object-fit: contain; }
+    .sidebar-logo { height: 42px; width: auto; object-fit: contain; }
     .sidebar-brand-text h2 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
     .sidebar-brand-text p { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
 
@@ -364,7 +364,7 @@
     .list-styled { padding-left: 20px; margin: 8px 0; }
     .list-styled li { margin-bottom: 6px; }
 
-    /* Оптимизация изображений под телефонный формат */
+    /* Изображения */
     .img-preview { 
       max-width: 100%; 
       height: auto; 
@@ -474,7 +474,7 @@
 
     .no-results { text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600; }
 
-    /* АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОННОГО ФОРМАТА (МЕДИАЗАПРОСЫ) */
+    /* АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОННОГО ФОРМАТА */
     @media (max-width: 868px) {
       body {
         flex-direction: column;
@@ -1455,7 +1455,6 @@
     const searchWrapper = document.getElementById('searchWrapper');
     searchWrapper.style.display = (tabName === 'memo' || tabName === 'price' || tabName === 'charter') ? 'block' : 'none';
 
-    // Закрываем меню на смартфонах при переключении
     closeSidebar();
   }
 
@@ -1609,7 +1608,6 @@
     const totalQuestions = boxes.length;
     const passingScore = Math.ceil(totalQuestions * 0.75); // 75% проходной балл
 
-    // Заполняем данные на странице итогов
     document.getElementById('resCadetName').innerText = academyState.name || 'Не указано';
     document.getElementById('resCadetStatic').innerText = academyState.staticId || '-';
     document.getElementById('resExaminerName').innerText = academyState.examiner || 'Не указано';
@@ -1620,7 +1618,6 @@
     statusSpan.innerText = isPassed ? 'СДАН (Успешно)' : 'НЕ СДАН (Повторите материал)';
     statusSpan.style.color = isPassed ? 'var(--success)' : 'var(--danger)';
 
-    // Показываем вкладку итогов и переключаемся на нее автоматически
     const tab3 = document.getElementById('acadTab3');
     tab3.style.display = 'block';
     switchAcademyStep(3);

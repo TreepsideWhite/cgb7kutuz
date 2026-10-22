@@ -54,6 +54,17 @@
       overflow-x: hidden;
     }
 
+    /* Мобильное оверлей-покрытие */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 99;
+    }
+    .sidebar-overlay.active { display: block; }
+
     /* Прелоадер */
     #preloader {
       position: fixed;
@@ -79,7 +90,7 @@
       flex-direction: column;
       gap: 10px;
       max-width: 340px;
-      width: 100%;
+      width: calc(100% - 40px);
       pointer-events: none;
     }
 
@@ -249,8 +260,24 @@
       top: 0;
       z-index: 90;
     }
+    .top-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
     .top-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
     .top-header p { font-size: 0.8rem; color: var(--text-muted); }
+
+    .mobile-menu-btn {
+      display: none;
+      background: var(--bg-card-inner);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 1.2rem;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
     .content-container {
       max-width: 1050px;
@@ -337,8 +364,22 @@
     .list-styled { padding-left: 20px; margin: 8px 0; }
     .list-styled li { margin-bottom: 6px; }
 
-    .img-preview { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border-color); margin: 12px 0; }
-    .img-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin: 12px 0; }
+    /* Оптимизация изображений под телефонный формат */
+    .img-preview { 
+      max-width: 100%; 
+      height: auto; 
+      object-fit: contain; 
+      border-radius: 8px; 
+      border: 1px solid var(--border-color); 
+      margin: 12px 0; 
+      display: block;
+    }
+    .img-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+      gap: 15px; 
+      margin: 12px 0; 
+    }
 
     /* Устав */
     .charter-section { line-height: 1.7; font-size: 0.95rem; }
@@ -432,11 +473,65 @@
     .exam-result-info span { font-weight: 700; color: var(--primary-solid); }
 
     .no-results { text-align: center; padding: 40px; color: var(--text-muted); font-weight: 600; }
+
+    /* АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОННОГО ФОРМАТА (МЕДИАЗАПРОСЫ) */
+    @media (max-width: 868px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -285px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+      }
+      .sidebar.open {
+        left: 0;
+      }
+      .mobile-menu-btn {
+        display: block;
+      }
+      .top-header {
+        padding: 12px 16px;
+      }
+      .top-header h3 {
+        font-size: 1rem;
+      }
+      .top-header p {
+        font-size: 0.72rem;
+      }
+      .content-container {
+        padding: 0 12px;
+        margin: 15px auto;
+      }
+      .tab-pane {
+        padding: 18px 14px;
+      }
+      .section-block {
+        padding: 14px;
+      }
+      .step-card {
+        padding: 12px;
+      }
+      .img-grid {
+        grid-template-columns: 1fr;
+      }
+      .academy-steps {
+        flex-direction: column;
+      }
+      th, td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body data-theme="dark">
 
   <div id="notification-container"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
   <div id="preloader">
     <img src="https://ru1.cdn.pixsafe.online/albums/ifgrb/1495112-middle1_LW28I.png" class="loader-logo" alt="Логотип">
@@ -444,7 +539,7 @@
   </div>
 
   <!-- БОКОВАЯ ПАНЕЛЬ НАВИГАЦИИ СЛЕВА -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <img src="https://ru1.cdn.pixsafe.online/albums/ifgrb/1495112-middle1_LW28I.png" alt="ЦГБ №7" class="sidebar-logo">
       <div class="sidebar-brand-text">
@@ -483,9 +578,12 @@
   <!-- ОСНОВНОЙ КОНТЕНТ СПРАВА -->
   <div class="main-content-wrapper">
     <header class="top-header">
-      <div>
-        <h3 id="headerTitle">Памятка по препаратам</h3>
-        <p>Информационный центр Государственного бюджетного учреждения здравоохранения «ЦГБ №7»</p>
+      <div class="top-header-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+          <h3 id="headerTitle">Памятка по препаратам</h3>
+          <p>Информационный центр Государственного бюджетного учреждения здравоохранения «ЦГБ №7»</p>
+        </div>
       </div>
     </header>
 
@@ -592,7 +690,7 @@
               <div class="step-title">2.4. Фиксация результата выдачи препарата</div>
               <p>Сумма вознаграждения составляет <span class="price-value">640 рублей</span>. Сделайте скриншот системного уведомления.</p>
               <div style="text-align: center; margin-top: 15px;">
-                <img src="https://cdn.pixsafe.online/albums/v7TEb/image_zTJ6q.png" alt="Пример скриншота выдачи таблеток" class="img-preview" style="max-width: 480px; display: inline-block;">
+                <img src="https://cdn.pixsafe.online/albums/v7TEb/image_zTJ6q.png" alt="Пример скриншота выдачи таблеток" class="img-preview" style="max-width: 480px; margin: 0 auto;">
               </div>
             </div>
           </div>
@@ -673,7 +771,7 @@
             <div class="section-title">📜 Раздел 3. Дополнительные положения</div>
             <div class="step-card">
               <div class="step-title">Пример отыгрыша:</div>
-              <div style="background: var(--bg-card-inner); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+              <div style="background: var(--bg-card-inner); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; line-height: 1.5; color: var(--text-main); word-break: break-word;">
                 /me приветствует пациента сдержанно, сохраняя профессиональный тон<br>
                 /todo Для оформления новой ЛМК потребуется 35 000 рублей, продление стоит 10 000. Какой вариант вам нужен?*<br>
                 /me ждёт ответа, затем просит паспорт и медицинскую книжку (если речь о продлении)<br>
@@ -791,10 +889,10 @@
           <div class="charter-toc" id="charterToc">
             <h3>СОДЕРЖАНИЕ</h3>
             <ul>
-              <li><a href="#sec1">Раздел I. Общие положения (Гл. 1-3)</a></li>
-              <li><a href="#sec2">Раздел II. Обязанности, запреты и режим труда (Гл. 4-8)</a></li>
-              <li><a href="#sec3">Раздел III. Дисциплина и кадры (Гл. 9-10)</a></li>
-              <li><a href="#sec4">Раздел IV. Служебная деятельность (Гл. 11-14)</a></li>
+              <li><a href="#sec1" onclick="scrollToAnchor(event, 'sec1')">Раздел I. Общие положения (Гл. 1-3)</a></li>
+              <li><a href="#sec2" onclick="scrollToAnchor(event, 'sec2')">Раздел II. Обязанности, запреты и режим труда (Гл. 4-8)</a></li>
+              <li><a href="#sec3" onclick="scrollToAnchor(event, 'sec3')">Раздел III. Дисциплина и кадры (Гл. 9-10)</a></li>
+              <li><a href="#sec4" onclick="scrollToAnchor(event, 'sec4')">Раздел IV. Служебная деятельность (Гл. 11-14)</a></li>
             </ul>
           </div>
 
@@ -1291,6 +1389,28 @@
     renderPriceTable(priceData);
   });
 
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+  }
+
+  function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }
+
+  function scrollToAnchor(event, id) {
+    event.preventDefault();
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
   function showNotification(title, desc, type = 'info') {
     const container = document.getElementById('notification-container');
     const notif = document.createElement('div');
@@ -1334,6 +1454,9 @@
 
     const searchWrapper = document.getElementById('searchWrapper');
     searchWrapper.style.display = (tabName === 'memo' || tabName === 'price' || tabName === 'charter') ? 'block' : 'none';
+
+    // Закрываем меню на смартфонах при переключении
+    closeSidebar();
   }
 
   function handleSearch() {
